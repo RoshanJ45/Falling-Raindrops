@@ -1,0 +1,116 @@
+const canvas = document.getElementById('rainCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+
+        const raindrops = [];
+        const ripples = [];
+        const maxRaindrops = 100;
+
+
+        class Raindrop {
+            constructor(x, y, speed, radius) {
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+                this.radius = radius;
+                this.alpha = 1;
+            }
+
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(173, 216, 230, ${this.alpha})`;
+                ctx.fill();
+            }
+
+
+            fall() {
+                this.y += this.speed;
+                this.alpha -= 0.005;
+                if (this.y > canvas.height) {
+                    this.createRipple();
+                    return true;  
+                }
+                this.draw();
+                return false;
+            }
+
+
+            createRipple() {
+                ripples.push(new Ripple(this.x, canvas.height, 2, 0.05));
+            }
+        }
+
+
+        class Ripple {
+            constructor(x, y, radius, growthRate) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.growthRate = growthRate;
+                this.alpha = 1;
+            }
+
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+
+            expand() {
+                this.radius += this.growthRate;
+                this.alpha -= 0.01;
+                this.draw();
+                return this.alpha <= 0;  
+            }
+        }
+
+
+        function createRaindrop() {
+            const x = Math.random() * canvas.width;
+            const speed = Math.random() * 4 + 2;
+            const radius = Math.random() * 3 + 2;
+            raindrops.push(new Raindrop(x, 0, speed, radius));
+
+
+            if (raindrops.length > maxRaindrops) {
+                raindrops.shift();  
+            }
+        }
+
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            raindrops.forEach((raindrop, index) => {
+                if (raindrop.fall()) {
+                    raindrops.splice(index, 1);
+                }
+            });
+
+
+            ripples.forEach((ripple, index) => {
+                if (ripple.expand()) {
+                    ripples.splice(index, 1);
+                }
+            });
+
+
+            requestAnimationFrame(animate);
+        }
+
+
+        setInterval(createRaindrop, 100); 
+        animate();
+
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
